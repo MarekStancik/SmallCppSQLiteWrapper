@@ -149,7 +149,6 @@ std::string SQLite3::toStringM(const std::tm& date)
 
 PreparedStatement& PreparedStatement::reset()
 {
-	rc = sqlite3_step(stmt);
 	rc = sqlite3_clear_bindings(stmt);
 	rc = sqlite3_reset(stmt);
 	return *this;

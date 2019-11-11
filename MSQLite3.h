@@ -180,6 +180,11 @@ private:
 		rc = sqlite3_bind_text(stmt, index, &param, 1, SQLITE_STATIC);
 	}
 
+	//Prepare parameter of boolean type
+	void prepareParam(const bool& param, const int index) {
+		prepareParam(static_cast<int>(param), index);
+	}
+
 
 	//Constructor of object is in private section
 	//It can be only called by SQLite3 component
