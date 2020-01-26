@@ -154,20 +154,20 @@ private:
 	//Prepare parameter of integral type
 	template<typename T>
 	void prepareParam(const T& param, const int index
-		, typename std::enable_if<std::is_integral<T>::value && !std::is_same_v<T, sqlite_int64>>::type* = 0){
+		, typename std::enable_if<std::is_integral<T>::value>::type* = 0){
 		rc = sqlite3_bind_int(stmt, index, param);
 	}
 
+
 	//Prepare parameter of int64 type
-	template<typename T>
-	void prepareParam(const T& param, const int index
-		, typename std::enable_if<std::is_same_v<T,sqlite_int64>>::type* = 0) {
+	void prepareParam(const sqlite_int64 param, const int index) {
 		rc = sqlite3_bind_int64(stmt, index, param);
 	}
 
 	//Prepare parameter of const char* type
 	void prepareParam(const char* param, const int index){
-		rc = sqlite3_bind_text(stmt, index, param, -1, SQLITE_STATIC);
+		rc = param ? sqlite3_bind_text(stmt, index, param, -1, SQLITE_STATIC)
+            : sqlite3_bind_null(stmt,index);
 	}
 
 	//Prepare parameter of string type
@@ -309,6 +309,35 @@ public:
 
 	//converts date to date string in format %y-%m
 	static std::string toStringM(const std::tm& date);
+};
+
+//Guard transaction
+//Transaction starts at the inicialization of the object
+//Transaction ends at destruction
+//example
+/*
+	TransactionGuard tg(db);
+
+	auto rs = db->createPreparedStatement("SELECT DISTINCT uniqueNumber FROM Receipt WHERE id = ?",id)
+		.executeQuery();
+
+	return rs ? rs.get<std::string>("uniqueNumber") : "";
+*/
+class TransactionGuard
+{
+private:
+	SQLite3 * db;
+public:
+	TransactionGuard(SQLite3 * db):db(db){
+		db->beginTransaction();
+	}
+
+	~TransactionGuard(){
+		try{
+			db->endTransaction();
+		}catch(...){
+        }
+	}
 };
 
 #endif

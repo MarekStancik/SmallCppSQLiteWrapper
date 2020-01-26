@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "MSQLite3.h"
 #include <stdexcept>
 
@@ -45,7 +44,10 @@ size_t ResultSet::count()
 
 //------------------------SQLite3-----------------------------//
 
-SQLite3::SQLite3(const char* dbPath, const char* createStmt) :errMsg(nullptr), db(nullptr)
+SQLite3::SQLite3(const char* dbPath, const char* createStmt)
+	:
+	errMsg(nullptr),
+	db(nullptr)
 {
 	result = sqlite3_open(dbPath, &db);
 	isOpened = result == SQLITE_OK;
