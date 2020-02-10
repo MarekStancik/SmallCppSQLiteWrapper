@@ -62,6 +62,8 @@ public:
 	//Constructor - does nothing special
 	ResultSet();
 
+	ResultSet(sqlite3_stmt * stmt);
+
 	//Add record to the result set
 	void addRecord(int count, const char** row, const char** cols);
 	void addRecord(Container::value_type&& record);

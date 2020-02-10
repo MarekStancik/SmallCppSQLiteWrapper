@@ -8,13 +8,30 @@ ResultSet::ResultSet()
 	iterator = container.begin();
 }
 
+ResultSet::ResultSet(sqlite3_stmt * stmt)
+	:ResultSet()
+{
+	while (sqlite3_step(stmt) == SQLITE_ROW) // While query has result-rows.
+	{
+		//  Iterate all columns and push column - name value pair to record
+		Container::value_type record;
+		for (int colIndex = 0; colIndex < sqlite3_column_count(stmt); ++colIndex)
+		{
+			const char * valuePtr = (const char*)(sqlite3_column_text(stmt, colIndex));
+			record.insert({ sqlite3_column_name(stmt, colIndex),valuePtr ? valuePtr : "" });
+		}
+
+		addRecord(std::move(record));
+	}
+}
+
 void ResultSet::addRecord(int count, const char** row, const char** cols)
 {
 	if (count)
 	{
 		Container::value_type icontain;
 		for (int i = 0; i < count; i++)
-			icontain.insert({ cols[i],(row[i] ? row[i] : "") });
+			icontain.insert({ cols[i],(row && row[i] ? row[i] : "") });
 		addRecord(std::move(icontain));
 	}
 }
@@ -170,17 +187,7 @@ PreparedStatement& PreparedStatement::execute()
 
 ResultSet PreparedStatement::executeQuery()
 {
-	ResultSet rs;
-	while (sqlite3_step(stmt) == SQLITE_ROW) // While query has result-rows.
-	{ 
-		//  Iterate all columns and push column - name value pair to record
-		ResultSet::Container::value_type record;
-		for (int colIndex = 0; colIndex < sqlite3_column_count(stmt); ++colIndex) 
-			record.insert({ sqlite3_column_name(stmt, colIndex), (const char*)sqlite3_column_text(stmt, colIndex) });
-
-		rs.addRecord(std::move(record));
-	}
-	return rs;
+	return ResultSet(stmt);
 }
 
 PreparedStatement::PreparedStatement(PreparedStatement&& ps)
